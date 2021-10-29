@@ -4,28 +4,28 @@ import numpy as np
 
 
 def get_fasta_info(input, output, window_size=10_000):
-    file = open(input).read()
+    with open(input) as file:
 
-    seq_iter = map(lambda seq: seq.split("\n", 1), file.split(">"))
-    next(seq_iter)
+        seq_iter = map(lambda seq: seq.split("\n", 1), file.read().split(">"))
+        next(seq_iter)
 
-    data = []
-    while True:
-        try:
-            seq = next(seq_iter)
+        data = []
+        while True:
+            try:
+                seq = next(seq_iter)
 
-            scaffold = seq[0].split(" ", 1)[0]
-            info = seq[0]
-            sequence = seq[1]
-            n_count = get_N_cnt(sequence)    
-            gc_content = np.mean(get_GC_content(seq=sequence, window=window_size))
+                scaffold = seq[0].split(" ", 1)[0]
+                info = seq[0]
+                sequence = seq[1]
+                n_count = get_N_cnt(sequence)    
+                gc_content = np.mean(get_GC_content(seq=sequence, window=window_size))
 
-            data.append([scaffold, len(sequence), n_count, gc_content, info])
-        except StopIteration:
-            break
+                data.append([scaffold, len(sequence), n_count, gc_content, info])
+            except StopIteration:
+                break
 
-    df = pd.DataFrame(data, columns=['scaffold_name', 'scaffold_length', 'n_count', 'gc_content', 'info'])
-    df.to_csv(output, index=False)
+        df = pd.DataFrame(data, columns=['scaffold_name', 'scaffold_length', 'n_count', 'gc_content', 'info'])
+        df.to_csv(output, index=False)
     return df
 
 
