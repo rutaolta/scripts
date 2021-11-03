@@ -1,9 +1,14 @@
-from os import mkdir
+import os
 import pandas as pd
 import numpy as np
 
 
-def get_fasta_info(input, output, window_size=10_000):
+def split_fasta(input, window_size=10_000):
+
+    path, filename = os.path.split(input)
+    newfilename = '%s_splitted.csv' % os.path.splitext(filename)[0]
+    output = os.path.join(path, newfilename)
+
     with open(input) as file:
 
         seq_iter = map(lambda seq: seq.split("\n", 1), file.read().split(">"))
@@ -16,17 +21,27 @@ def get_fasta_info(input, output, window_size=10_000):
 
                 scaffold = seq[0].split(" ", 1)[0]
                 info = seq[0]
-                sequence = seq[1]
-                n_count = get_N_cnt(sequence)    
-                gc_content = np.mean(get_GC_content(seq=sequence, window=window_size))
+                sequence = ''.join(seq[1].splitlines())
 
-                data.append([scaffold, len(sequence), n_count, gc_content, info])
+                data.append([scaffold, sequence, info])
             except StopIteration:
                 break
 
-        df = pd.DataFrame(data, columns=['scaffold_name', 'scaffold_length', 'n_count', 'gc_content', 'info'])
+        df = pd.DataFrame(data, columns=['scaffold_name', 'sequence' , 'info'])
         df.to_csv(output, index=False)
     return df
+
+
+def get_scaffolds_length(scaffolds):
+    return np.array(map(lambda scaffold: len(scaffold), scaffolds))
+
+
+def get_scaffolds_N_count(scaffolds):
+    return np.array(map(lambda scaffold: get_N_cnt(scaffold), scaffolds))
+
+
+def get_scaffolds_GC_content(scaffolds, window_size=10_000):
+    return np.array(map(lambda scaffold: np.mean(get_GC_content(seq=scaffold, window=window_size)), scaffolds))
 
 
 def get_genome_len(lenghts):
@@ -81,14 +96,4 @@ def get_GC_content(seq, window=50_000):
     for i in range(0, len(seq), window):
         values.append(GC(seq[i : i + window]))
     return values
-
-
-def test(input='scripts/saccharomyces_cerevisiae.fasta', output='scripts/fasta_info.csv'):
-    df = get_fasta_info(input, output)
-    print("Genome length: ", get_genome_len(df['scaffold_length']))
-    print("Max scaffold length: ", get_max_scaffold_len(df['scaffold_length']))
-    print("Scaffold count: ", get_scaffold_cnt(df))
-    print("N50: ", get_N50(df['scaffold_length']))
-    print("L50: ", get_L50(df['scaffold_length']))
-    print("NG50: ", get_NG50(df['scaffold_length'], genome_size=12_242_942))
 
