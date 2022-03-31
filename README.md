@@ -1,4 +1,4 @@
-In current repository are collected some useful bioinformatic scripts
+In current repository some useful bioinformatic scripts are collected
 
 ### Mini quast
 
