@@ -1,3 +1,9 @@
+R_scripts/R_maps_habitat/pinnipeds/MAMMALS_MARINE_ONLY/*
+R_scripts/R_maps_habitat/pinnipeds/Halichoerus_grypus/*
+R_scripts/R_maps_habitat/pinnipeds/Phoca_largha/*
+R_scripts/R_maps_habitat/pinnipeds/Pusa_sibirica
+R_scripts/R_maps_habitat/pinnipeds/MAMMALS_MARINE_ONLY.zip
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

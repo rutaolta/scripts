@@ -1,0 +1,111 @@
+Before launch you may need to install libraries:
+
+    sudo apt install libssl-dev
+    sudo apt install libcurl4-openssl-dev
+    sudo apt install libjq-dev
+    sudo apt install libudunits2-dev
+    sudo apt install libgdal-dev
+
+Also you should download from [UICN](https://www.iucnredlist.org/) coordinates of habitat areas (Range data - Polygons (SHP)).
+It may ask you for the reason of download.
+Then downloaded data should be unzipped.
+
+```{r message = FALSE, warning = FALSE}
+library("ggplot2")
+theme_set(theme_bw())
+library("sf")
+library("rnaturalearth")
+library("rnaturalearthdata")
+library("ggspatial")
+library(rgdal)
+library(raster)
+library(rgeos)
+```
+
+```{r}
+# world <- map_data("world")
+world <- ne_countries(scale = "medium", returnclass = "sf")
+```
+
+```{r message = FALSE, warning = FALSE}
+# extent: -74.4179, 47.18714, 38.95443, 72.31044 (xmin, xmax, ymin, ymax)}
+halichoerus_grypus <- readOGR("/home/aliya/1BIOINF/tools/1SCRIPTS/R_scripts/R_maps_habitat/pinnipeds/Halichoerus_grypus/redlist_species_data_572a6ac4-8301-4f90-9332-9f977b511f1e/data_0.shp", "data_0")
+proj4string(halichoerus_grypus)
+halichoerus_grypus <- spTransform(halichoerus_grypus, crs("+proj=longlat +datum=WGS84 +no_defs"))
+```
+
+```{r message = FALSE, warning = FALSE}
+# extent: -179.999, 179.999, 29.14324, 73.19724
+phoca_largha <- readOGR("/home/aliya/1BIOINF/tools/1SCRIPTS/R_scripts/R_maps_habitat/pinnipeds/Phoca_largha/redlist_species_data_530bd885-a896-4758-b30c-9605d1c1cd73/data_0.shp", "data_0")
+proj4string(phoca_largha)
+phoca_largha <- spTransform(phoca_largha, crs("+proj=longlat +datum=WGS84 +no_defs"))
+```
+
+```{r message = FALSE, warning = FALSE}
+# extent: 103.7074, 109.9571, 51.45408, 55.8047
+pusa_sibirica <- readOGR("/home/aliya/1BIOINF/tools/1SCRIPTS/R_scripts/R_maps_habitat/pinnipeds/Pusa_sibirica/redlist_species_data_5e96c034-5cc0-4b3c-80a2-5580cfe1cf97/data_0.shp", "data_0")
+proj4string(pusa_sibirica)
+pusa_sibirica <- spTransform(pusa_sibirica, crs("+proj=longlat +datum=WGS84 +no_defs"))
+```
+
+Draw areas of habitat on map
+
+```{r}
+world <- ne_countries(scale = "medium", returnclass = "sf")
+halichoerus_grypus = st_as_sf(halichoerus_grypus)
+phoca_largha = st_as_sf(phoca_largha)
+pusa_sibirica = st_as_sf(pusa_sibirica)
+
+ggplot(data = world) +
+    geom_sf(fill = "antiquewhite1") +
+    geom_sf(data = halichoerus_grypus, fill = '#c7dbd3') +
+    geom_sf(data = phoca_largha, fill = '#f6cc7e') +
+    geom_sf(data = pusa_sibirica, fill = '#9aa0f1') +
+    annotation_scale(location = "bl", width_hint = 0.2) +
+    coord_sf(xlim = c(-179.999, 179.999), ylim = c(29.14324, 73.19724))
+```
+
+```{r}
+# ggplot() +
+#   geom_map(
+#     data = world, map = world,
+#     aes(long, lat, map_id = region),
+#     color = "black", fill = "lightgray", size = 0.1
+#   )
+#   + geom_sf(data = )
+```
+
+```{r}
+# library("ggspatial")
+
+# ggplot(data = world) +
+#     geom_sf() +
+#     annotation_scale(location = "tr", width_hint = 0.3) +
+#     coord_sf(xlim = c(-62.15, 190.12), ylim = c(30.65, 85.97))
+```
+
+```{r}
+# ggplot(data = world) +
+#     geom_sf() +
+#     geom_sf(data = states, fill = NA) + 
+#     geom_text(data = states, aes(X, Y, label = ID), size = 5) +
+#     coord_sf(xlim = c(-88, -78), ylim = c(24.5, 33), expand = FALSE)
+```
+
+
+```{r}
+# library(rgdal)
+# library(rasterSp)
+
+# r_halichoerus_grypus <- rasterizeIUCN(dsn=paste0(filedir, "/home/aliya/1BIOINF/1PINNIPEDS/R_maps_habitat/pinnipeds/Halichoerus_grypus/data_0.shp"), resolution=0.5, 
+#                               seasonal=c(1,2), origin=1, presence=c(1,2), 
+#                               save=TRUE, path=paste0(filedir, "/home/aliya/1BIOINF/1PINNIPEDS/R_maps_habitat/pinnipeds/SpeciesData"))
+# r_halichoerus_grypus
+# system("unzip /home/aliya/1BIOINF/1PINNIPEDS/R_maps_habitat/pinnipeds/redlist_species_data_572a6ac4-8301-4f90-9332-9f977b511f1e.zip")
+# my_spdf <- readOGR( 
+#   dsn= paste0(getwd(),"/home/aliya/1BIOINF/1PINNIPEDS/R_maps_habitat/pinnipeds/Halichoerus_grypus/") , 
+#   layer="TM_WORLD_BORDERS_SIMPL-0.3",
+#   verbose=FALSE,
+#   encoding="UTF-8"
+# )
+```
