@@ -1,10 +1,14 @@
-Before launch you may need to install libraries:
+Before launch you may need to install libraries in terminal:
 
     sudo apt install libssl-dev
     sudo apt install libcurl4-openssl-dev
     sudo apt install libjq-dev
     sudo apt install libudunits2-dev
     sudo apt install libgdal-dev
+
+and in R terminal:
+
+    install.packages(c("cowplot", "googleway", "ggplot2", "ggrepel", "ggspatial", "libwgeom", "sf", "rnaturalearth", "rnaturalearthdata"))
 
 Also you should download from [UICN](https://www.iucnredlist.org/) coordinates of habitat areas (Range data - Polygons (SHP)).
 It may ask you for the reason of download.
@@ -52,15 +56,34 @@ Draw areas of habitat on map
 
 ```{r}
 world <- ne_countries(scale = "medium", returnclass = "sf")
+
+halichoerus_grypus <- st_as_sf(halichoerus_grypus)
+phoca_largha <- st_as_sf(phoca_largha)
+pusa_sibirica <- st_as_sf(pusa_sibirica)
+ 
+ggplot(data = world) +
+    geom_sf(fill = "antiquewhite1") +
+    geom_sf(data = halichoerus_grypus, fill = '#9aa0f1') +
+    geom_sf(data = phoca_largha, fill = '#f6cc7e') +
+    geom_sf(data = pusa_sibirica, fill = '#7ef0c2') +
+    geom_point(x = -70.604301, y = 42.662578, size = 2, shape = 21, fill = '#1322f1') +
+    geom_point(x = -162.747845, y = 66.542215, size = 2, shape = 21, fill = '#c53421') +
+    geom_point(x = 128.897639, y = 37.858993, size = 2, shape = 21, fill = '#bd8621') +
+    geom_point(x = 107, y = 54, size = 2, shape = 21, fill = '#138356') +
+    annotation_scale(location = "bl", width_hint = 0.1) +
+    coord_sf(xlim = c(-179.999, 179.999), ylim = c(29.14324, 73.19724)) #+
+    # theme(panel.background = element_rect(fill = "aliceblue"))
+```
+
+```{r}
+world <- ne_countries(scale = "medium", returnclass = "sf")
 halichoerus_grypus = st_as_sf(halichoerus_grypus)
 phoca_largha = st_as_sf(phoca_largha)
 pusa_sibirica = st_as_sf(pusa_sibirica)
 
 ggplot(data = world) +
     geom_sf(fill = "antiquewhite1") +
-    geom_sf(data = halichoerus_grypus, fill = '#c7dbd3') +
-    geom_sf(data = phoca_largha, fill = '#f6cc7e') +
-    geom_sf(data = pusa_sibirica, fill = '#9aa0f1') +
+    geom_sf(data = pusa_sibirica, fill = '#4f9b7c') +
     annotation_scale(location = "bl", width_hint = 0.1) +
-    coord_sf(xlim = c(-179.999, 179.999), ylim = c(29.14324, 73.19724))
+    coord_sf(xlim = c(103.7074, 109.9571), ylim = c(51.45408, 55.8047))
 ```
