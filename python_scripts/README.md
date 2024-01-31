@@ -20,7 +20,7 @@ Example of usage *hypervariable_sites.py* is shown in *test_hypervariable_sites.
 
 ### Change coordinates from DDM to DD format
 
-Type	Latitude / Y	Longitude / X
+Type	Latitude /t Y	Longitude /t X
 
 Decimal Degrees (DD)	-77.508333	164.754167
 
