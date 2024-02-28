@@ -4,6 +4,10 @@ R_scripts/R_maps_habitat/pinnipeds/Phoca_largha/*
 R_scripts/R_maps_habitat/pinnipeds/Pusa_sibirica
 R_scripts/R_maps_habitat/pinnipeds/MAMMALS_MARINE_ONLY.zip
 
+# exception
+test.ipynb
+detect_illumina_instrument_from_header.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
