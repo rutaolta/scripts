@@ -1,0 +1,89 @@
+```{r, warning = FALSE, message = FALSE}
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(forcats)
+library(ggthemes)
+library(patchwork)
+library(colorBlindness)
+library ("purrr")
+library(readr)
+```
+
+# Link to source
+https://luisdva.github.io/rstats/model-cluster-plots/
+
+```{r}
+admixture_format <- function(k=2, path_wo_ext, path_pop=""){
+    indiv <- read.table(paste(path_wo_ext,"fam", sep="."))["V2"]
+    colnames(indiv) <- c("indiv")
+    indiv$ID <- seq.int(nrow(indiv))
+    
+    if (path_pop!=""){
+        pop <- read.table(path_pop,sep=",", col.name=c("species","indiv"))
+        indiv <- left_join(indiv, pop)
+    }
+
+    q <-read.table(paste(path_wo_ext, k, "Q", sep="."),stringsAsFactors=T)
+    q$ID <- seq.int(nrow(q))
+
+    df <- merge(x=indiv, y=q, by="ID")
+
+    if (path_pop == "") start <- 3
+    else start <- 4
+    end <- k+start-1
+    
+    data <- gather(df, key="popGroup", value="prob", start:end)
+    return(data)
+}
+```
+
+
+```{r}
+admixture_plot <- function(data){
+    k <- max(parse_number(data$popGroup))
+    plot <-
+    ggplot(data, aes(factor(indiv), prob, fill = factor(popGroup))) +
+    geom_col(color = "gray", linewidth = 0.1) +
+    theme_minimal() + labs(x = "", title = paste("K=",k,sep=""), y = "Admixture proportions") +
+    scale_y_continuous(expand = c(0, 0)) +
+    scale_x_discrete(expand = expansion(add = 1)) +
+    theme(
+        panel.spacing.x = unit(0.1, "lines"),
+        axis.text.x = element_text(angle=90),
+        strip.placement = "outside",
+        legend.position = "none"
+    ) +
+    scale_fill_manual(values=Blue2Gray8Steps)
+
+    if (!is_empty(data$species)) {
+        plot <- plot+facet_grid(~fct_inorder(data$species), switch = "x", scales = "free", space = "free")
+    }
+    plot
+}
+```
+
+# How to run it
+`path_wo_ext` is a path to the header of admixture files (*.fam, *.Q) without extensions
+
+`path_pop` is a path to the file with assignment groups for individuals (ex. population).
+
+1st column there is the name of group.
+
+2nd column is the name/code/ID of individual. The same as was used in *.fam
+
+Parameter is optional. If you do not want to divide your data into facets, then omit.
+
+```{r, out.width="100%", warning = FALSE, message = FALSE}
+data <- admixture_format(k=3, path_wo_ext="/home/aliya/1BIOINF/1SEALIONS/admixture/Ejub_Q20_min80/NoLow_Ejub_snps_Q20_min80",
+            path_pop="/home/aliya/1BIOINF/1SEALIONS/admixture/pop_indiv.csv")
+
+admixture_plot(data)
+```
+
+```{r, out.width="100%", warning = FALSE, message = FALSE}
+data <- admixture_format(k=3, path_wo_ext="/home/aliya/1BIOINF/1SEALIONS/admixture/all_Q20/Snps_Q20_NoMO40_noX",
+            path_pop="/home/aliya/1BIOINF/1SEALIONS/admixture/pop_indiv.csv")
+
+admixture_plot(data)
+```

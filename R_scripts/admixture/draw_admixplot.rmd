@@ -1,0 +1,83 @@
+```{r}
+library(colorBlindness)
+```
+
+# Link to source
+http://www.popgen.dk/software/index.php/EvalAdmix
+
+```{r}
+admixture_plot <- function(path_wo_ext="/home/aliya/1BIOINF/1SEALIONS/admixture/Ejub_Q20_min80/NoLow_Ejub_snps_Q20_min80", k=2, padj=0.05, font_size=1){
+source("/home/aliya/1BIOINF/tools/evalAdmix/visFuns.R")
+
+# read population labels and estimated admixture proportions
+pop<-read.table(paste(path_wo_ext,"fam", sep="."))
+q<-read.table(paste(path_wo_ext, k, "Q", sep="."),stringsAsFactors=T)
+
+# palette(c("#A6CEE3","#1F78B4","#B2DF8A","#33A02C","#FB9A99","#E31A1C","#FDBF6F","#FF7F00","#CAB2D6","#6A3D9A","#FFFF99","#B15928","#1B9E77","#999999"))
+
+# order according to population and plot the ADMIXTURE reults
+ord<-orderInds(pop = as.vector(pop[,2]), q = q)
+
+#make barplot
+par(mar=c(5,4,2,0))
+plotAdmix(q,ord=ord,pop=pop[,2],colorpal=Blue2Gray8Steps,rotatelab=90, padj=padj, cex.lab=font_size)
+}
+```
+
+# Hybrids
+## K=2
+```{r, out.width="100%"}
+admixture_plot("/home/aliya/1BIOINF/1SEALIONS/admixture/Ejub_Q20_min80/NoLow_Ejub_snps_Q20_min80", k=2)
+```
+
+## K=3
+```{r, out.width="100%"}
+admixture_plot("/home/aliya/1BIOINF/1SEALIONS/admixture/Ejub_Q20_min80/NoLow_Ejub_snps_Q20_min80", k=3)
+```
+
+## K=4
+```{r, out.width="100%"}
+admixture_plot("/home/aliya/1BIOINF/1SEALIONS/admixture/Ejub_Q20_min80/NoLow_Ejub_snps_Q20_min80", k=4)
+```
+
+## K=5
+```{r, out.width="100%"}
+admixture_plot("/home/aliya/1BIOINF/1SEALIONS/admixture/Ejub_Q20_min80/NoLow_Ejub_snps_Q20_min80", k=5)
+```
+
+# All
+## K=2
+```{r, out.width="100%"}
+admixture_plot("/home/aliya/1BIOINF/1SEALIONS/admixture/all_Q20/Snps_Q20_NoMO40_noX", k=2, padj=015, font_size=0.7)
+```
+
+
+## K=3
+```{r, out.width="100%"}
+admixture_plot("/home/aliya/1BIOINF/1SEALIONS/admixture/all_Q20/Snps_Q20_NoMO40_noX", k=3, padj=015, font_size=0.7)
+```
+
+
+## K=4
+```{r, out.width="100%"}
+admixture_plot("/home/aliya/1BIOINF/1SEALIONS/admixture/all_Q20/Snps_Q20_NoMO40_noX", k=4, padj=0.015, font_size=0.65)
+```
+
+
+## K=5
+```{r, out.width="100%"}
+admixture_plot("/home/aliya/1BIOINF/1SEALIONS/admixture/all_Q20/Snps_Q20_NoMO40_noX", k=5, padj=0.015, font_size=0.7)
+```
+
+# Run before
+First run evalAdmix to get output.corres.txt
+./evalAdmix -plink NoLow_Ejub_snps_Q20_min80 -fname NoLow_Ejub_snps_Q20_min80.2.P -qname NoLow_Ejub_snps_Q20_min80.2.Q -P 20
+
+
+```{r}
+
+# r<-as.matrix(read.table("/home/aliya/1BIOINF/1SEALIO/NS/admixture/all_Q20/output.corres.txt"))
+
+# Plot correlation of residuals
+# plotCorRes(cor_mat = r, pop = as.vector(pop[,2]), ord=ord, title="Evaluation of 1000G admixture proportions with K=2", max_z=0.1, min_z=-0.1)
+```
