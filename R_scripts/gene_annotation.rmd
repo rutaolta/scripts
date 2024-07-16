@@ -79,7 +79,7 @@ plotTracks(list(gtrack, geneTrack, repeatTrack, scgeneTrack, snpTrack),
            background.panel = "white", background.title = "lightgrey", col.axis = "black", col.title = "black")
 ```
 
-# Working example
+# Working example with human genome
 ```{r}
 gen <- "hg19"
 chr <- "chrY"
@@ -102,10 +102,10 @@ aTrack <- AnnotationTrack(start = c(50, 180, 260, 460, 860, 1240),
                           genome = gen, name = "scgenes", rotation.item = 90, stacking="pack")
 grtrack <- GeneRegionTrack(geneModels, genome = gen, chromosome = chr, name = "Gene Model")
 
-plotTracks(list(itrack,gtrack,aTrack), featureAnnotation = "above",  title="Chromosome Y",
+plotTracks(list(itrack,gtrack,aTrack,grtrack), featureAnnotation = "above",  title="Chromosome Y",
            background.panel = "white", background.title = "white", col.axis = "black", col.title = "black")
 ```
-# Working example with sea lion samples
+# Working example with sea lion genome
 ```{r}
 options(ucscChromosomeNames=FALSE)
 
@@ -120,27 +120,47 @@ genometrack <- GenomeAxisTrack()
 gen <- readDNAStringSet("/home/yakupova/1PROJECTS/Y/assembly/Y.fa")
 # sequenceTrack <- SequenceTrack(gen, genome = "ZalCal", chromosome = chr, name = "Sequence")
 
-snp_data <- data.frame(
-  chrom = c("CM019820.2", "CM019820.2", "CM019820.2"),
-  start = c(50000, 100000, 150000),
-  end = c(50000, 100000, 150000),
-  name = c("snp1", "snp2", "snp3"),
-  score = c(1, 1, 1)
-)
-snpTrack <- AnnotationTrack(
-  start = snp_data$start,
-  end = snp_data$end,
-  chromosome = snp_data$chrom,
-  genome = gen,
-  id = snp_data$name,
-  feature = snp_data$name,
-  name = "SNPs",
-  stacking = "dense"
-)
+# snp_data <- data.frame(
+#   chrom = c("CM019820.2", "CM019820.2", "CM019820.2"),
+#   start = c(50000, 100000, 150000),
+#   end = c(50000, 100000, 150000),
+#   name = c("snp1", "snp2", "snp3"),
+#   score = c(1, 1, 1)
+# )
+# snpTrack <- AnnotationTrack(
+#   start = snp_data$start,
+#   end = snp_data$end,
+#   chromosome = snp_data$chrom,
+#   genome = gen,
+#   id = snp_data$name,
+#   feature = snp_data$name,
+#   name = "SNPs",
+#   stacking = "dense"
+# )
 
 # anno <- import("/home/yakupova/1PROJECTS/Y/ncbi_annotation/Ygenes2020-08.gff3")
-anno <- import("/home/yakupova/1PROJECTS/Y/ncbi_annotation/annotation_CM019821.2.gff3")
-geneTrack <- GeneRegionTrack(anno, genome = "ZalCal", chromosome = chr, name = "Genes")
+# anno <- import("/home/yakupova/1PROJECTS/Y/ncbi_annotation/annotation_CM019821.2.gff3")
+# geneTrack <- GeneRegionTrack(anno, genome = "ZalCal", chromosome = chr, name = "Genes")
+Yregion_colors <- c(
+  "pseudo" = "mediumseagreen",
+  "single" = "steelblue3",
+  "multi" = "khaki1",
+  "Xtrans" = "palevioletred2"
+)
+
+annotation_file <- "/home/yakupova/1PROJECTS/Y/Y_annotation_plot/Ychromsome_annotation_Rin.csv"
+annotations <- read.csv(annotation_file, sep = '\t')
+geneTrack <- AnnotationTrack(
+                genome = "ZalCal", chromosome = chr, name = "Genes",
+                start = annotations$Start,
+                end = annotations$Stop,
+                strand = annotations$Strand,
+                group = annotations$Name,
+                fontcolor.group = "black",
+                feature = annotations$Name,
+                fill = Yregion_colors[annotations$Yregion],
+                col = Yregion_colors[annotations$Yregion],
+                rotation.item = 90, stacking="squish", showFeatureNames=TRUE)
 
 bam <- "/home/yakupova/1PROJECTS/Y/bam/G465_merged_duprm_subsample0_25_realigned.Y.bam"
 coverageTrack <- DataTrack(range = bam, genome = "ZalCal", type = "l",
@@ -150,6 +170,7 @@ coverageTrack <- DataTrack(range = bam, genome = "ZalCal", type = "l",
 
 plotTracks(list(genometrack, snpTrack, geneTrack, coverageTrack),
            from = plot_start, to = plot_end,
+           chromosome = chr,
            featureAnnotation = "above",
            background.panel = "white", background.title = "white", col.axis = "black", col.title = "black")
 ```
@@ -159,6 +180,42 @@ plotTracks(list(genometrack, snpTrack, geneTrack, coverageTrack),
 # chrom(geneTrack) <- chr
 # chrom(itrack) <- chr
 # chrom(coverageTrack) <- chr
+```
+# Example of custom geneTrack
+```{r}
+
+options(ucscChromosomeNames=FALSE)
+
+plot_start <- 1
+plot_end <- 3986568 
+
+chr <- "CM019820.2"
+# annochr <- "NC_045613.1"
+
+genometrack <- GenomeAxisTrack()
+
+annotation_file <- "/home/yakupova/1PROJECTS/Y/Y_annotation_plot/Ychromsome_annotation_Rin.csv"
+annotations <- read.csv(annotation_file, sep = '\t')
+Yregion_colors <- c(
+  "pseudo" = "mediumseagreen",
+  "single" = "steelblue3",
+  "multi" = "khaki1",
+  "Xtrans" = "palevioletred2"
+)
+
+geneTrack <- AnnotationTrack(
+                genome = "ZalCal", chromosome = chr, name = "Genes",
+                start = annotations$Start, #c(50, 180, 260, 460, 860, 1240),
+                end = annotations$Stop, #c(15, 20, 40, 100, 200, 20),
+                strand = annotations$Strand, #c("-","-","+","+","-","+"),
+                feature = annotations$Name, #c("gene1-","gene2-","gene3+","gene4+","gene5-","gene6+"),
+                fill = Yregion_colors[annotations$Yregion], # fill = c("#3a3a99","#3a3a99","#63a763","#63a763","#3a3a99","#bfc237"),
+                col = Yregion_colors[annotations$Yregion],
+                rotation.item = 90, stacking="pack")
+plotTracks(list(genometrack,geneTrack),
+           from = plot_start, to = plot_end,
+           featureAnnotation = "above",
+           background.panel = "white", background.title = "white", col.axis = "black", col.title = "black")
 ```
 # Example of custom Ideogram
 ```{r}
