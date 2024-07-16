@@ -3,20 +3,20 @@ file_path="Zalophus.californianus__genome__2068.CSL-13399-Jaxy__Chicago.HiC__v2.
 echo "Contig name is ${contig_name}";
 echo " ";
 
-fasta_7031=$(awk "/^>.*${contig_name}/{flag=1; next} /^>/{flag=0} flag" ${file_path} | tr -d '\n');
+seq=$(awk "/^>.*${contig_name}/{flag=1; next} /^>/{flag=0} flag" ${file_path} | tr -d '\n');
 
 echo "The sequence of the contig itself";
-echo $fasta_7031;
+echo $seq;
 echo "---------------------------------";
 
 echo "The length of the contig sequence";
-echo ${#fasta_7031};
+echo ${#seq};
 echo "---------------------------------";
 
 echo "Get the nucleotide on the required position";
-echo $fasta_7031 | cut -c 934;
+echo $seq | cut -c 934;
 echo "---------------------------------";
 
 echo "Get the nucleotide on the required range of positions";
-echo $fasta_7031 | cut -c 933-935;
+echo $seq | cut -c 933-935;
 echo "---------------------------------";
