@@ -4,6 +4,7 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 
 BiocManager::install("Gviz")
 BiocManager::install("GenomicRanges")
+install.packages("sqldf")
 ```
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 library(Gviz)
@@ -11,6 +12,7 @@ library(GenomicRanges)
 library(BSgenome)
 library(Biostrings)
 library(rtracklayer)
+library(sqldf)
 ```
 
 
@@ -113,8 +115,8 @@ snpTrack <- DataTrack(start = snps_df$start, end = snps_df$end, data = rep(1, nr
 # )
 ```
 
-# Working example with human genome
 ```{r echo=FALSE}
+# Working example with human genome
 gen <- "hg19"
 chr <- "chrY"
 # annotations <- import("/home/yakupova/1PROJECTS/Y/ncbi_annotation/genomic.gff")
@@ -145,43 +147,46 @@ plotTracks(list(itrack,gtrack,aTrack,grtrack), featureAnnotation = "above",  tit
 ```
 
 # Working example with sea lion genome
+## Genome Track
 ```{r}
 options(ucscChromosomeNames=FALSE)
 getOption("Gviz.scheme")
+data(collapseTrack)
 
 plot_start <- 1
 plot_end <- 3986568 
 
 chr <- "CM019820.2"
-# annochr <- "NC_045613.1"
 
 genometrack <- GenomeAxisTrack()
 
 gen <- readDNAStringSet("/home/yakupova/1PROJECTS/Y/assembly/Y.fa")
-# sequenceTrack <- SequenceTrack(gen, genome = "ZalCal", chromosome = chr, name = "Sequence")
+```
 
-snp_data <- data.frame(
-  chrom = c("CM019820.2", "CM019820.2", "CM019820.2"),
-  start = c(50000, 100000, 150000),
-  end = c(50000, 100000, 150000),
-  name = c("snp1", "snp2", "snp3"),
-  score = c(1, 1, 1)
-)
+## Sequence Track
+```{r}
+# sequenceTrack <- SequenceTrack(gen, genome = "ZalCal", chromosome = chr, name = "Sequence")
+```
+
+## SNP Track
+```{r}
+snp_file <- "/home/yakupova/1PROJECTS/Y/haplotype_analysis/MassArraySNPpositions.txt"
+snp_data <- read.csv(snp_file, sep = '\t')
 snpTrack <- AnnotationTrack(
-  start = snp_data$start,
-  end = snp_data$end,
-  chromosome = snp_data$chrom,
+  start = snp_data$Position,
+  end = snp_data$Position,
+  chromosome = chr,
   genome = gen,
-  id = snp_data$name,
-  feature = snp_data$name,
+  id = snp_data$Assay,
+  feature = snp_data$Assay,
   name = "SNPs",
   stacking = "dense"
 )
+```
 
-# anno <- import("/home/yakupova/1PROJECTS/Y/ncbi_annotation/Ygenes2020-08.gff3")
-# anno <- import("/home/yakupova/1PROJECTS/Y/ncbi_annotation/annotation_CM019821.2.gff3")
-# geneTrack <- GeneRegionTrack(anno, genome = "ZalCal", chromosome = chr, name = "Genes")
-Yregion_colors <- c(
+## Annotation Track
+```{r}
+Yregion_col <- c(
   "pseudo" = "mediumseagreen",
   "single" = "steelblue3",
   "multi" = "khaki1",
@@ -189,30 +194,32 @@ Yregion_colors <- c(
 )
 
 annotation_file <- "/home/yakupova/1PROJECTS/Y/Y_annotation_plot/Ychromsome_annotation_Rin.csv"
-annotations <- read.csv(annotation_file, sep = '\t')
+anno <- read.csv.sql(annotation_file, sep = '\t', sql="select * from file where gene_biotype != 'pseudogene'")
 geneTrack <- AnnotationTrack(
-                genome = "ZalCal", chromosome = chr, name = "Genes",
-                start = annotations$Start,
-                end = annotations$Stop,
-                strand = annotations$Strand,
-                group = annotations$Name,
-                feature = annotations$Name,
-                fill = Yregion_colors[annotations$Yregion],
-                col = Yregion_colors[annotations$Yregion],
-                stacking="dense", showFeatureNames=TRUE,
-                fontcolor.group = "black", fontcolor.item = "black",
-                shape="fixedArrow", arrowHeadWidth=100, showFeatureId=TRUE,
-                just.group = "above", featureAnnotation = "above",
-                rotation.item = 90, height = 0.5)
+            genome = "ZalCal", name = "Genes", chromosome = chr,
+            start = anno$Start, end = anno$Stop, strand = anno$Strand,
+            feature = anno$Name, group=anno$Yregion,
+            fill = Yregion_col[anno$Yregion],
+            col = Yregion_col[anno$Yregion],
+            stacking="hide", shape="fixedArrow", arrowHeadWidth=100
+            )
+```
 
+## Coverage Track
+```{r}
 bam <- "/home/yakupova/1PROJECTS/Y/bam/G465_merged_duprm_subsample0_25_realigned.Y.bam"
 coverageTrack <- DataTrack(range = bam, genome = "ZalCal", type = "l",
                            name = "Coverage", window = -1,
                            chromosome = chr, ylim = c(0, 20))
+```
 
-
+## Plot Tracks
+```{r}
 plotTracks(list(genometrack, snpTrack, geneTrack, coverageTrack),
            from = plot_start, to = plot_end,
            chromosome = chr,
-           background.panel = "white", background.title = "white", col.axis = "black", col.title = "black")
+           legend = TRUE, groupAnnotation="feature",
+           rotation.group = 90, just.group = "above",
+           background.panel = "white", background.title = "white",
+           col.axis = "black", col.title = "black")
 ```
