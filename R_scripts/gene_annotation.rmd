@@ -1,11 +1,11 @@
-```{r echo=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
 BiocManager::install("Gviz")
 BiocManager::install("GenomicRanges")
 ```
-```{r echo=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 library(Gviz)
 library(GenomicRanges)
 library(BSgenome)
@@ -15,8 +15,8 @@ library(rtracklayer)
 
 
 
-# Example genomic ranges for genes, repeats, and SNPs
 ```{r echo=FALSE}
+# Example genomic ranges for genes, repeats, and SNPs
 genes <- GRanges(seqnames = "chr1",
                  ranges = IRanges(start = c(100, 500, 900), end = c(200, 600, 1000)),
                  strand = c("+", "-", "+"),
@@ -37,8 +37,8 @@ snps <- GRanges(seqnames = "chr1",
 
 
 
-# Version with AnnotationTrack
 ```{r echo=FALSE}
+# Version with AnnotationTrack
 gtrack <- GenomeAxisTrack()
 
 geneTrack <- AnnotationTrack(genes, genome = "hg19", name = "Genes", col = "darkblue", fill = "darkblue")
@@ -52,8 +52,8 @@ snpTrack <- AnnotationTrack(snps, genome = "hg19", name = "SNPs", col = "purple"
 
 ```
 
-# Version with DataTrack
 ```{r echo=FALSE}
+# Version with DataTrack
 genes_df <- as.data.frame(genes)
 repeats_df <- as.data.frame(repeats)
 scgenes_df <- as.data.frame(scgenes)
@@ -78,7 +78,41 @@ snpTrack <- DataTrack(start = snps_df$start, end = snps_df$end, data = rep(1, nr
 #            from = 50, to = 1100, sizes = c(1, 0.8, 0.8, 0.8, 0.8), 
 #            background.panel = "white", background.title = "lightgrey", col.axis = "black", col.title = "black")
 ```
----
+
+```{r echo=FALSE}
+# Example of custom Ideogram
+# options(ucscChromosomeNames=FALSE)
+
+# plot_start <- 1
+# plot_end <- 3986568
+
+
+# cytoband_data <- data.frame(
+#   chrom = c("CM019820.2", "CM019820.2", "CM019820.2", "CM019820.2"),
+#   chromStart = c(0, 5000000, 10000000, 15000000),
+#   chromEnd = c(5000000, 10000000, 15000000, 20000000),
+#   name = c("p36.33", "p36.32", "p36.31", "p36.3"),
+#   gieStain = c("gpos100", "gneg", "acen", "gpos75")
+# )
+# ideogramTrack <- IdeogramTrack(
+#   chromosome = chr,
+#   genome = "ZalCal",
+#   bands = cytoband_data
+# )
+# plotTracks(
+#   list(ideogramTrack),
+#   from = plot_start,
+#   to = plot_end,
+#   chromosome = "CM019820.2",
+#   featureAnnotation = "above",
+#   title = "Chromosome Y",
+#   background.panel = "white",
+#   background.title = "white",
+#   col.axis = "black",
+#   col.title = "black"
+# )
+```
+
 # Working example with human genome
 ```{r echo=FALSE}
 gen <- "hg19"
@@ -109,6 +143,7 @@ grtrack <- GeneRegionTrack(geneModels, genome = gen, chromosome = chr, name = "G
 plotTracks(list(itrack,gtrack,aTrack,grtrack), featureAnnotation = "above",  title="Chromosome Y",
            background.panel = "white", background.title = "white", col.axis = "black", col.title = "black")
 ```
+
 # Working example with sea lion genome
 ```{r}
 options(ucscChromosomeNames=FALSE)
@@ -180,38 +215,4 @@ plotTracks(list(genometrack, snpTrack, geneTrack, coverageTrack),
            from = plot_start, to = plot_end,
            chromosome = chr,
            background.panel = "white", background.title = "white", col.axis = "black", col.title = "black")
-```
-
-# Example of custom Ideogram
-```{r echo=FALSE}
-options(ucscChromosomeNames=FALSE)
-
-plot_start <- 1
-plot_end <- 3986568
-
-
-cytoband_data <- data.frame(
-  chrom = c("CM019820.2", "CM019820.2", "CM019820.2", "CM019820.2"),
-  chromStart = c(0, 5000000, 10000000, 15000000),
-  chromEnd = c(5000000, 10000000, 15000000, 20000000),
-  name = c("p36.33", "p36.32", "p36.31", "p36.3"),
-  gieStain = c("gpos100", "gneg", "acen", "gpos75")
-)
-ideogramTrack <- IdeogramTrack(
-  chromosome = chr,
-  genome = "ZalCal",
-  bands = cytoband_data
-)
-# plotTracks(
-#   list(ideogramTrack),
-#   from = plot_start,
-#   to = plot_end,
-#   chromosome = "CM019820.2",
-#   featureAnnotation = "above",
-#   title = "Chromosome Y",
-#   background.panel = "white",
-#   background.title = "white",
-#   col.axis = "black",
-#   col.title = "black"
-# )
 ```
