@@ -115,7 +115,7 @@ snpTrack <- DataTrack(start = snps_df$start, end = snps_df$end, data = rep(1, nr
 # )
 ```
 
-```{r echo=FALSE}
+```{r echo=FALSE, fig.show='hide'}
 # Working example with human genome
 gen <- "hg19"
 chr <- "chrY"
