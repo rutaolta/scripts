@@ -1,11 +1,12 @@
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
+  install.packages("BiocManager")
 
 BiocManager::install("Gviz")
 BiocManager::install("GenomicRanges")
 install.packages("sqldf")
 ```
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 library(Gviz)
 library(GenomicRanges)
@@ -17,144 +18,16 @@ library(sqldf)
 
 
 
-```{r echo=FALSE}
-# Example genomic ranges for genes, repeats, and SNPs
-genes <- GRanges(seqnames = "chr1",
-                 ranges = IRanges(start = c(100, 500, 900), end = c(200, 600, 1000)),
-                 strand = c("+", "-", "+"),
-                 gene = c("gene1", "gene2", "gene3"))
-
-repeats <- GRanges(seqnames = "chr1",
-                   ranges = IRanges(start = c(150, 550, 950), end = c(180, 580, 980)),
-                   repeats = c("repeat1", "repeat2", "repeat3"))
-
-scgenes <- GRanges(seqnames = "chr1",
-                   ranges = IRanges(start = c(120, 570, 960), end = c(130, 580, 970)),
-                   scgene = c("scgene1", "scgene2", "scgene3"))
-
-snps <- GRanges(seqnames = "chr1",
-                ranges = IRanges(start = c(120, 570, 960), end = c(120, 570, 960)),
-                snp = c("snp1", "snp2", "snp3"))
-```
-
-
-
-```{r echo=FALSE}
-# Version with AnnotationTrack
-gtrack <- GenomeAxisTrack()
-
-geneTrack <- AnnotationTrack(genes, genome = "hg19", name = "Genes", col = "darkblue", fill = "darkblue")
-repeatTrack <- AnnotationTrack(repeats, genome = "hg19", name = "Repeats", col = "red", fill = "red")
-scgeneTrack <- AnnotationTrack(scgenes, genome = "hg19", name = "SC Genes", col = "green", fill = "green")
-snpTrack <- AnnotationTrack(snps, genome = "hg19", name = "SNPs", col = "purple", fill = "purple", shape = "box")
-
-# plotTracks(list(gtrack, geneTrack, repeatTrack, scgeneTrack, snpTrack), 
-#            from = 50, to = 1100, sizes = c(1, 0.8, 0.8, 0.8, 0.8),
-#            background.panel = "white", background.title = "lightgrey", col.axis = "black", col.title = "black")
-
-```
-
-```{r echo=FALSE}
-# Version with DataTrack
-genes_df <- as.data.frame(genes)
-repeats_df <- as.data.frame(repeats)
-scgenes_df <- as.data.frame(scgenes)
-snps_df <- as.data.frame(snps)
-
-gtrack <- GenomeAxisTrack()
-geneTrack <- DataTrack(start = genes_df$start, end = genes_df$end, data = rep(1, nrow(genes_df)),
-                       chromosome = "chr1", genome = "hg19", name = "Genes", type = "hist", 
-                       col.histogram = "darkblue", fill.histogram = "darkblue")
-
-repeatTrack <- DataTrack(start = repeats_df$start, end = repeats_df$end, data = rep(1, nrow(repeats_df)),
-                         chromosome = "chr1", genome = "hg19", name = "Repeats", type = "hist", 
-                         col.histogram = "red", fill.histogram = "red")
-scgeneTrack <- DataTrack(start = scgenes_df$start, end = scgenes_df$end, data = rep(1, nrow(scgenes_df)),
-                         chromosome = "chr1", genome = "hg19", name = "SC Genes", type = "hist", 
-                         col.histogram = "green", fill.histogram = "green")
-snpTrack <- DataTrack(start = snps_df$start, end = snps_df$end, data = rep(1, nrow(snps_df)),
-                      chromosome = "chr1", genome = "hg19", name = "SNPs", type = "hist", 
-                      col.histogram = "purple", fill.histogram = "purple")
-
-# plotTracks(list(gtrack, geneTrack, repeatTrack, scgeneTrack, snpTrack), 
-#            from = 50, to = 1100, sizes = c(1, 0.8, 0.8, 0.8, 0.8), 
-#            background.panel = "white", background.title = "lightgrey", col.axis = "black", col.title = "black")
-```
-
-```{r echo=FALSE}
-# Example of custom Ideogram
-# options(ucscChromosomeNames=FALSE)
-
-# plot_start <- 1
-# plot_end <- 3986568
-
-
-# cytoband_data <- data.frame(
-#   chrom = c("CM019820.2", "CM019820.2", "CM019820.2", "CM019820.2"),
-#   chromStart = c(0, 5000000, 10000000, 15000000),
-#   chromEnd = c(5000000, 10000000, 15000000, 20000000),
-#   name = c("p36.33", "p36.32", "p36.31", "p36.3"),
-#   gieStain = c("gpos100", "gneg", "acen", "gpos75")
-# )
-# ideogramTrack <- IdeogramTrack(
-#   chromosome = chr,
-#   genome = "ZalCal",
-#   bands = cytoband_data
-# )
-# plotTracks(
-#   list(ideogramTrack),
-#   from = plot_start,
-#   to = plot_end,
-#   chromosome = "CM019820.2",
-#   featureAnnotation = "above",
-#   title = "Chromosome Y",
-#   background.panel = "white",
-#   background.title = "white",
-#   col.axis = "black",
-#   col.title = "black"
-# )
-```
-
-```{r echo=FALSE, fig.show='hide'}
-# Working example with human genome
-gen <- "hg19"
-chr <- "chrY"
-# annotations <- import("/home/yakupova/1PROJECTS/Y/ncbi_annotation/genomic.gff")
-# bam <- import("/home/yakupova/1PROJECTS/Y/bam/G465_merged_duprm_subsample0_25_realigned.Y.bam")
-
-gtrack <- GenomeAxisTrack()
-# sequenceTrack <- SequenceTrack(gen, genome = "ZalCal")
-# geneTrack <- GeneRegionTrack(annotations, genome = "ZalCal", chromosome = chr, name = "Genes")
-itrack <- IdeogramTrack(genome = gen, chromosome = chr)
-aTrack <- AnnotationTrack(start = c(50, 180, 260, 460, 860, 1240),
-                          width = c(15, 20, 40, 100, 200, 20),
-                          chromosome = chr,
-                          strand = c("-","-","+","+","-","+"),
-                          feature = c("gene1-","gene2-","gene3+","gene4+","gene5-","gene6+"),
-                          fill = c("#3a3a99","#3a3a99","#63a763","#63a763","#3a3a99","#bfc237"),
-                          #  strand = rep(c("+", "*", "-"), c(1, 3, 2)),
-                          group = c("gene1", "gene2", "gene3", "gene4", "gene5", "gene6"),
-                          genome = gen, name = "scgenes",
-                          shape = "fixedArrow", arrowHeadWidth=500,
-                          rotation.item = 90, stacking="dense", fontcolor.item = "black", featureAnnotation="above"
-                          )
-
-data(geneModels)
-grtrack <- GeneRegionTrack(geneModels, genome = gen, chromosome = chr, name = "Gene Model")
-
-plotTracks(list(itrack,gtrack,aTrack,grtrack), featureAnnotation = "above",  title="Chromosome Y",
-           background.panel = "white", background.title = "white", col.axis = "black", col.title = "black")
-```
-
 # Working example with sea lion genome
+
 ## Genome Track
 ```{r}
-options(ucscChromosomeNames=FALSE)
+options(ucscChromosomeNames = FALSE)
 getOption("Gviz.scheme")
 data(collapseTrack)
 
 plot_start <- 1
-plot_end <- 3986568 
+plot_end <- 3986568
 
 chr <- "CM019820.2"
 
@@ -171,7 +44,7 @@ gen <- readDNAStringSet("/home/yakupova/1PROJECTS/Y/assembly/Y.fa")
 ## SNP Track
 ```{r}
 snp_file <- "/home/yakupova/1PROJECTS/Y/haplotype_analysis/MassArraySNPpositions.txt"
-snp_data <- read.csv(snp_file, sep = '\t')
+snp_data <- read.csv(snp_file, sep = "\t")
 snpTrack <- AnnotationTrack(
   start = snp_data$Position,
   end = snp_data$Position,
@@ -189,7 +62,7 @@ snpTrack <- AnnotationTrack(
 Yregion_col <- c(
   "pseudo" = "mediumseagreen",
   "single" = "steelblue3",
-  "multi" = "khaki1",
+  "multi" = "#fdf065",
   "Xtrans" = "palevioletred2"
 )
 
@@ -198,11 +71,21 @@ anno <- read.csv.sql(annotation_file, sep = '\t', sql="select * from file where 
 geneTrack <- AnnotationTrack(
             genome = "ZalCal", name = "Genes", chromosome = chr,
             start = anno$Start, end = anno$Stop, strand = anno$Strand,
-            feature = anno$Name, group=anno$Yregion,
+            feature = anno$Name,
             fill = Yregion_col[anno$Yregion],
-            col = Yregion_col[anno$Yregion],
-            stacking="hide", shape="fixedArrow", arrowHeadWidth=100
-            )
+            col = "white",
+            stacking="hide", shape="fixedArrow", arrowHeadWidth=100)
+```
+
+## Homologous Track
+```{r}
+homolog_file <- "/home/yakupova/1PROJECTS/Y/blast/homologous_regions.rX_wo_PAR_cumsum.qY.filtered1000.90pident.sorted.merged.bed"
+homolog <- read.csv(homolog_file, sep = '\t')
+homologTrack <- AnnotationTrack(
+                genome = "ZalCal", name = "Homologs", chromosome = chr,
+                start = homolog$Start, end = homolog$End,
+                stacking="dense",
+                col="#2180ce", fill="#2180ce")
 ```
 
 ## Coverage Track
@@ -215,7 +98,7 @@ coverageTrack <- DataTrack(range = bam, genome = "ZalCal", type = "l",
 
 ## Plot Tracks
 ```{r}
-plotTracks(list(genometrack, snpTrack, geneTrack, coverageTrack),
+plotTracks(list(genometrack, snpTrack, geneTrack, homologTrack, coverageTrack),
            from = plot_start, to = plot_end,
            chromosome = chr,
            legend = TRUE, groupAnnotation="feature",
