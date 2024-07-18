@@ -41,22 +41,35 @@ gen <- readDNAStringSet("/home/yakupova/1PROJECTS/Y/assembly/Y.fa")
 # sequenceTrack <- SequenceTrack(gen, genome = "ZalCal", chromosome = chr, name = "Sequence")
 ```
 
-## SNP Track
+## SNP Track (MassArray)
 ```{r}
 snp_file <- "/home/yakupova/1PROJECTS/Y/haplotype_analysis/MassArraySNPpositions.txt"
 snp_data <- read.csv(snp_file, sep = "\t")
-snpTrack <- AnnotationTrack(
+snpTrackMassArray <- AnnotationTrack(
   start = snp_data$Position,
   end = snp_data$Position,
   chromosome = chr,
   genome = gen,
   id = snp_data$Assay,
   feature = snp_data$Assay,
-  name = "SNPs",
+  name = "MassArray SNPs",
   stacking = "dense"
 )
 ```
 
+## SNP Track (Bioinf)
+```{r}
+snp_file <- "/home/yakupova/1PROJECTS/Y/Y_annotation_plot/All_males_CSL_Y_snp.bed"
+snp_data <- read.csv(snp_file, sep = "\t")
+snpTrackBioinf <- AnnotationTrack(
+  start = snp_data$Position,
+  end = snp_data$Position,
+  chromosome = chr,
+  genome = gen,
+  name = "Bioinf SNPs",
+  stacking = "dense"
+)
+```
 ## Annotation Track
 ```{r}
 Yregion_col <- c(
@@ -98,7 +111,7 @@ coverageTrack <- DataTrack(range = bam, genome = "ZalCal", type = "l",
 
 ## Plot Tracks
 ```{r}
-plotTracks(list(genometrack, snpTrack, geneTrack, homologTrack, coverageTrack),
+plotTracks(list(genometrack, geneTrack, snpTrackMassArray, snpTrackBioinf, homologTrack, coverageTrack),
            from = plot_start, to = plot_end,
            chromosome = chr,
            legend = TRUE, groupAnnotation="feature",
