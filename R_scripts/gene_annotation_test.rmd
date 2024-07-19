@@ -145,3 +145,49 @@ grtrack <- GeneRegionTrack(geneModels, genome = gen, chromosome = chr, name = "G
 plotTracks(list(itrack,gtrack,aTrack,grtrack), featureAnnotation = "above",  title="Chromosome Y",
            background.panel = "white", background.title = "white", col.axis = "black", col.title = "black")
 ```
+
+```{r}
+# Load necessary libraries
+library(Gviz)
+library(dplyr)
+
+# Create a sample data frame
+df <- data.frame(
+  seqnames = rep("chr1", 10),
+  start = seq(1, 999, by=100),
+  end = seq(100, 1099, by=100),
+  repeat_class = c("Simple_repeat", "Complex_repeat", "Other_repeat",
+                   "Simple_repeat", "Complex_repeat", "Other_repeat",
+                   "Simple_repeat", "Complex_repeat", "Other_repeat", "Simple_repeat")
+)
+
+# View the sample data frame
+print(df)
+
+# Define a color mapping for repeat classes
+color_mapping <- c(
+  "Simple_repeat" = "blue",
+  "Complex_repeat" = "red",
+  "Other_repeat" = "green"
+)
+
+# Split the data frame by repeat class
+split_data <- split(df, df$repeat_class)
+
+# Create an AnnotationTrack for each repeat class with the appropriate color
+tracks <- lapply(names(split_data), function(class) {
+  data <- split_data[[class]]
+  AnnotationTrack(start = data$start, end = data$end, chromosome = data$seqnames[1], 
+                  genome = "hg19", name = class, group = data$repeat_class, 
+                  stacking = "dense", col = "black", fill = color_mapping[class])
+})
+
+# Define the range for plotting
+plot_start <- min(df$start)
+plot_end <- max(df$end)
+
+# Plot the tracks
+plotTracks(tracks, from = plot_start, to = plot_end, chromosome = "chr1", 
+           featureAnnotation = "above", title = "Repeat Classes",
+           background.panel = "white", background.title = "white", col.axis = "black", col.title = "black")
+```

@@ -14,6 +14,7 @@ library(BSgenome)
 library(Biostrings)
 library(rtracklayer)
 library(sqldf)
+library(dplyr)
 ```
 
 
@@ -46,14 +47,12 @@ gen <- readDNAStringSet("/home/yakupova/1PROJECTS/Y/assembly/Y.fa")
 snp_file <- "/home/yakupova/1PROJECTS/Y/haplotype_analysis/MassArraySNPpositions.txt"
 snp_data <- read.csv(snp_file, sep = "\t")
 snpTrackMassArray <- AnnotationTrack(
-  start = snp_data$Position,
-  end = snp_data$Position,
-  chromosome = chr,
-  genome = gen,
-  id = snp_data$Assay,
-  feature = snp_data$Assay,
+  start = snp_data$Position, end = snp_data$Position,
+  chromosome = chr, genome = gen,
+  id = snp_data$Assay, feature = snp_data$Assay,
   name = "MassArray SNPs",
-  stacking = "dense"
+  stacking = "dense",
+  col="lightgrey", fill="lightgrey"
 )
 ```
 
@@ -62,15 +61,14 @@ snpTrackMassArray <- AnnotationTrack(
 snp_file <- "/home/yakupova/1PROJECTS/Y/Y_annotation_plot/All_males_CSL_Y_snp.bed"
 snp_data <- read.csv(snp_file, sep = "\t")
 snpTrackBioinf <- AnnotationTrack(
-  start = snp_data$Position,
-  end = snp_data$Position,
-  chromosome = chr,
-  genome = gen,
+  start = snp_data$Position, end = snp_data$Position,
+  chromosome = chr, genome = gen,
   name = "Bioinf SNPs",
-  stacking = "dense"
+  stacking = "dense",
+  col="lightgrey", fill="lightgrey"
 )
 ```
-## Annotation Track
+## Genes Track
 ```{r}
 Yregion_col <- c(
   "pseudo" = "mediumseagreen",
@@ -88,6 +86,55 @@ geneTrack <- AnnotationTrack(
             fill = Yregion_col[anno$Yregion],
             col = "white",
             stacking="hide", shape="fixedArrow", arrowHeadWidth=100)
+```
+
+## Repeats Track
+```{r}
+repeat_class_col <- c(
+  "DNA" = "steelblue3",
+  "DNA?" = "steelblue3",
+  "DNA/hAT-Ac" = "steelblue3",
+  "DNA/hAT-Blackjack" = "steelblue3",
+  "DNA/hAT-Charlie" = "steelblue3",
+  "DNA/hAT-Tip100" = "steelblue3",
+  "DNA/PIF-Harbinger" = "steelblue3",
+  "DNA/TcMar-Mariner" = "steelblue3",
+  "DNA/TcMar-Tc2" = "steelblue3",
+  "DNA/TcMar-Tigger" = "steelblue3",
+  "LINE/CR1" = "mediumseagreen",
+  "LINE/L1" = "mediumseagreen",
+  "LINE/L2" = "mediumseagreen",
+  "LINE/Penelope" = "mediumseagreen",
+  "LINE/RTE-BovB" = "mediumseagreen",
+  "LTR?" = "#fdf065",
+  "LTR/ERV1" = "#fdf065",
+  "LTR/ERVL" = "#fdf065",
+  "LTR/ERVL?" = "#fdf065",
+  "LTR/ERVL-MaLR" = "#fdf065",
+  "LTR/Gypsy" = "#fdf065",
+  "LTR/Gypsy?" = "#fdf065",
+  "SINE/5S-Deu-L2" = "palevioletred2",
+  "SINE/MIR" = "palevioletred2",
+  "SINE/tRNA" = "palevioletred2",
+  "SINE/tRNA-Deu" = "palevioletred2",
+  "SINE/tRNA-RTE" = "palevioletred2",
+  "rRNA" = "orange",
+  "snRNA" = "orange",
+  "tRNA" = "orange",
+  "Satellite" = "#c02727",
+  "Simple_repeat" = "lightgrey",
+  "Low_complexity" = "lightgrey"
+)
+repeats_file <- "/home/yakupova/1PROJECTS/Y/Y_annotation_plot/GCA_009762305.2_mZalCal1.pri.v2_rm.CM019820.2.csv"
+repeats <- read.csv(repeats_file, sep = '\t')
+repeats <- repeats %>% filter(!repeat_class %in% c("LINE/CR1","LINE/L1","LINE/L2","LINE/Penelope" ,"LINE/RTE-BovB"))
+repeatsTrack <- AnnotationTrack(
+            genome = "ZalCal", name = "Repeats", chromosome = chr,
+            start = repeats$pos_in_query_begin, end = repeats$pos_in_query_end,
+            feature = repeats$ID,
+            fill = repeat_class_col[repeats$repeat_class],
+            col = repeat_class_col[repeats$repeat_class],
+            stacking="dense")
 ```
 
 ## Homologous Track
@@ -111,10 +158,18 @@ coverageTrack <- DataTrack(range = bam, genome = "ZalCal", type = "l",
 
 ## Plot Tracks
 ```{r}
-plotTracks(list(genometrack, geneTrack, snpTrackMassArray, snpTrackBioinf, homologTrack, coverageTrack),
+plotTracks(list(
+              genometrack,
+              geneTrack,
+              snpTrackMassArray,
+              snpTrackBioinf,
+              repeatsTrack,
+              homologTrack,
+              coverageTrack
+            ),
            from = plot_start, to = plot_end,
            chromosome = chr,
-           legend = TRUE, groupAnnotation="feature",
+           legend = TRUE, groupAnnotation = "feature",
            rotation.group = 90, just.group = "above",
            background.panel = "white", background.title = "white",
            col.axis = "black", col.title = "black")
