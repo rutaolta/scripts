@@ -30,11 +30,13 @@ data(collapseTrack)
 plot_start <- 1
 plot_end <- 3986568
 
-chr <- "CM019820.2"
-
-genometrack <- GenomeAxisTrack()
-
 gen <- readDNAStringSet("/home/yakupova/1PROJECTS/Y/assembly/Y.fa")
+chr <- "CM019820.2"
+```
+
+## Genome Axis Track
+```{r}
+genometrack <- GenomeAxisTrack()
 ```
 
 ## Sequence Track
