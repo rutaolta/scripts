@@ -18,7 +18,6 @@ library(dplyr)
 ```
 
 
-
 # Working example with sea lion genome
 
 ## Genome Track
