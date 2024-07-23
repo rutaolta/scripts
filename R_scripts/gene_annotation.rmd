@@ -47,13 +47,12 @@ genometrack <- GenomeAxisTrack()
 ```{r}
 snp_file <- "/home/yakupova/1PROJECTS/Y/haplotype_analysis/MassArraySNPpositions.txt"
 snp_data <- read.csv(snp_file, sep = "\t")
-snpTrackMassArray <- AnnotationTrack(
-  start = snp_data$Position, end = snp_data$Position,
-  chromosome = chr, genome = gen,
-  id = snp_data$Assay, feature = snp_data$Assay,
-  name = "MassArray SNPs",
-  stacking = "dense",
-  col="lightgrey", fill="lightgrey"
+
+snpTrackMassArray <- AnnotationTrack(genome = gen, chromosome = chr, name = "MassArray SNPs",
+                                     start = snp_data$Position, end = snp_data$Position,
+                                     id = snp_data$Assay, feature = snp_data$Assay,
+                                     stacking = "dense",
+                                     col = "lightgrey", fill = "lightgrey"
 )
 ```
 
@@ -61,12 +60,11 @@ snpTrackMassArray <- AnnotationTrack(
 ```{r}
 snp_file <- "/home/yakupova/1PROJECTS/Y/Y_annotation_plot/All_males_CSL_Y_snp.bed"
 snp_data <- read.csv(snp_file, sep = "\t")
-snpTrackBioinf <- AnnotationTrack(
-  start = snp_data$Position, end = snp_data$Position,
-  chromosome = chr, genome = gen,
-  name = "Bioinf SNPs",
-  stacking = "dense",
-  col="lightgrey", fill="lightgrey"
+
+snpTrackBioinf <- AnnotationTrack(genome = gen, chromosome = chr, name = "Bioinf SNPs",
+                                  start = snp_data$Position, end = snp_data$Position,
+                                  stacking = "dense",
+                                  col = "lightgrey", fill = "lightgrey"
 )
 ```
 ## Genes Track
@@ -79,14 +77,14 @@ Yregion_col <- c(
 )
 
 annotation_file <- "/home/yakupova/1PROJECTS/Y/Y_annotation_plot/Ychromsome_annotation_Rin.csv"
-anno <- read.csv.sql(annotation_file, sep = '\t', sql="select * from file where gene_biotype != 'pseudogene'")
-geneTrack <- AnnotationTrack(
-            genome = "ZalCal", name = "Genes", chromosome = chr,
-            start = anno$Start, end = anno$Stop, strand = anno$Strand,
-            feature = anno$Name,
-            fill = Yregion_col[anno$Yregion],
-            col = "white",
-            stacking="hide", shape="fixedArrow", arrowHeadWidth=100)
+anno <- read.csv.sql(annotation_file, sep = "\t", sql = "select * from file where gene_biotype != 'pseudogene'")
+
+geneTrack <- AnnotationTrack(genome = "ZalCal", chromosome = chr, name = "Genes",
+                             start = anno$Start, end = anno$Stop, strand = anno$Strand,
+                             feature = anno$Name, groups = anno$Yregion,
+                             fill = Yregion_col[anno$Yregion], col = "transparent",
+                             stacking = "hide", shape = "fixedArrow", arrowHeadWidth = 100
+)
 ```
 
 ## Repeats Track
@@ -128,33 +126,36 @@ repeat_class_col <- c(
 )
 repeats_file <- "/home/yakupova/1PROJECTS/Y/Y_annotation_plot/GCA_009762305.2_mZalCal1.pri.v2_rm.CM019820.2.csv"
 repeats <- read.csv(repeats_file, sep = '\t')
-repeats <- repeats %>% filter(!repeat_class %in% c("LINE/CR1","LINE/L1","LINE/L2","LINE/Penelope" ,"LINE/RTE-BovB"))
-repeatsTrack <- AnnotationTrack(
-            genome = "ZalCal", name = "Repeats", chromosome = chr,
-            start = repeats$pos_in_query_begin, end = repeats$pos_in_query_end,
-            feature = repeats$ID,
-            fill = repeat_class_col[repeats$repeat_class],
-            col = repeat_class_col[repeats$repeat_class],
-            stacking="dense")
+repeats <- repeats %>% filter(!repeat_class %in% c("LINE/CR1", "LINE/L1", "LINE/L2", "LINE/Penelope", "LINE/RTE-BovB"))
+
+repeatsTrack <- AnnotationTrack(genome = "ZalCal", chromosome = chr, name = "Repeats",
+                                start = repeats$pos_in_query_begin, end = repeats$pos_in_query_end,
+                                feature = repeats$ID,
+                                fill = repeat_class_col[repeats$repeat_class],
+                                col = "transparent",
+                                stacking = "dense"
+)
 ```
 
 ## Homologous Track
 ```{r}
 homolog_file <- "/home/yakupova/1PROJECTS/Y/blast/homologous_regions.rX_wo_PAR_cumsum.qY.filtered1000.90pident.sorted.merged.bed"
-homolog <- read.csv(homolog_file, sep = '\t')
-homologTrack <- AnnotationTrack(
-                genome = "ZalCal", name = "Homologs", chromosome = chr,
-                start = homolog$Start, end = homolog$End,
-                stacking="dense",
-                col="#2180ce", fill="#2180ce")
+homolog <- read.csv(homolog_file, sep = "\t")
+
+homologTrack <- AnnotationTrack(genome = "ZalCal", chromosome = chr, name = "Homologs",
+                                start = homolog$Start, end = homolog$End,
+                                stacking = "dense",
+                                col = "#2180ce", fill = "#2180ce"
+)
 ```
 
 ## Coverage Track
 ```{r}
 bam <- "/home/yakupova/1PROJECTS/Y/bam/G465_merged_duprm_subsample0_25_realigned.Y.bam"
-coverageTrack <- DataTrack(range = bam, genome = "ZalCal", type = "l",
-                           name = "Coverage", window = -1,
-                           chromosome = chr, ylim = c(0, 20))
+
+coverageTrack <- DataTrack(range = bam, genome = "ZalCal", chromosome = chr, name = "Coverage",
+                           type = "l", window = -1, ylim = c(0, 20)
+)
 ```
 
 ## Plot Tracks
@@ -167,11 +168,23 @@ plotTracks(list(
               repeatsTrack,
               homologTrack,
               coverageTrack
-            ),
+),
            from = plot_start, to = plot_end,
            chromosome = chr,
            legend = TRUE, groupAnnotation = "feature",
            rotation.group = 90, just.group = "above",
            background.panel = "white", background.title = "white",
            col.axis = "black", col.title = "black")
+```
+```{r}
+# Function to close all open connections
+close_all_connections <- function() {
+  open_conns <- showConnections(all = TRUE)
+  for (conn in seq_len(nrow(open_conns))) {
+    try(close(getConnection(as.integer(open_conns[conn, "description"]))), silent = TRUE)
+  }
+}
+
+# Call the function to close all connections
+close_all_connections()
 ```

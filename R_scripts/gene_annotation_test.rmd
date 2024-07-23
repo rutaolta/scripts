@@ -150,44 +150,59 @@ plotTracks(list(itrack,gtrack,aTrack,grtrack), featureAnnotation = "above",  tit
 # Load necessary libraries
 library(Gviz)
 library(dplyr)
-
-# Create a sample data frame
-df <- data.frame(
-  seqnames = rep("chr1", 10),
-  start = seq(1, 999, by=100),
-  end = seq(100, 1099, by=100),
-  repeat_class = c("Simple_repeat", "Complex_repeat", "Other_repeat",
-                   "Simple_repeat", "Complex_repeat", "Other_repeat",
-                   "Simple_repeat", "Complex_repeat", "Other_repeat", "Simple_repeat")
+```
+## Genes Track
+```{r}
+Yregion_col <- c(
+  "pseudo" = "mediumseagreen",
+  "single" = "steelblue3",
+  "multi" = "#fdf065",
+  "Xtrans" = "palevioletred2"
 )
 
-# View the sample data frame
-print(df)
-
-# Define a color mapping for repeat classes
-color_mapping <- c(
-  "Simple_repeat" = "blue",
-  "Complex_repeat" = "red",
-  "Other_repeat" = "green"
+annotation_file <- "/home/yakupova/1PROJECTS/Y/Y_annotation_plot/Ychromsome_annotation_Rin.csv"
+anno <- read.csv.sql(annotation_file, sep = "\t", sql = "select * from file where gene_biotype != 'pseudogene'")
+# read about DetailsAnnotationTrack http://bioconductor.riken.jp/packages/3.10/bioc/vignettes/Gviz/inst/doc/Gviz.html
+geneTrack <- AnnotationTrack(genome = "ZalCal", chromosome = chr, name = "Genes",
+                             start = anno$Start, end = anno$Stop, strand = anno$Strand,
+                             feature = anno$Name, groups = anno$Yregion,
+                             fill = Yregion_col[anno$Yregion], col="transparent",
+                            #  degree = .1,
+                             stacking = "hide", shape = "fixedArrow", arrowHeadWidth = 100
 )
-
-# Split the data frame by repeat class
-split_data <- split(df, df$repeat_class)
-
-# Create an AnnotationTrack for each repeat class with the appropriate color
-tracks <- lapply(names(split_data), function(class) {
-  data <- split_data[[class]]
-  AnnotationTrack(start = data$start, end = data$end, chromosome = data$seqnames[1], 
-                  genome = "hg19", name = class, group = data$repeat_class, 
-                  stacking = "dense", col = "black", fill = color_mapping[class])
-})
 
 # Define the range for plotting
-plot_start <- min(df$start)
-plot_end <- max(df$end)
+plot_start <- 1
+plot_end <- 3986568
 
-# Plot the tracks
-plotTracks(tracks, from = plot_start, to = plot_end, chromosome = "chr1", 
-           featureAnnotation = "above", title = "Repeat Classes",
-           background.panel = "white", background.title = "white", col.axis = "black", col.title = "black")
+chr <- "CM019820.2"
+
+## Plot Tracks
+plotTracks(list(geneTrack),
+           from = plot_start, to = plot_end,
+           chromosome = chr,
+           legend = TRUE, groupAnnotation = "feature",
+           rotation.group = 90, just.group = "above",
+           background.panel = "white", background.title = "white",
+           col.axis = "black", col.title = "black",
+           groupAnnotation="feature", margin=9, innerMargin = 6
+          )
+
+# Function to close all open connections
+close_all_connections <- function() {
+  open_conns <- showConnections(all = TRUE)
+  if (nrow(open_conns) > 0) {
+    for (conn in seq_len(nrow(open_conns))) {
+      conn_id <- as.integer(open_conns[conn, "class"])
+      if (!is.na(conn_id)) {
+        try({
+          close(getConnection(conn_id))
+        }, silent = TRUE)
+      }
+    }
+  }
+}
+
+# Call the function to close all open connections
+close_all_connections()
 ```
