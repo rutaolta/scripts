@@ -191,18 +191,78 @@ plotTracks(list(geneTrack),
 # Function to close all open connections
 close_all_connections <- function() {
   open_conns <- showConnections(all = TRUE)
-  if (nrow(open_conns) > 0) {
-    for (conn in seq_len(nrow(open_conns))) {
-      conn_id <- as.integer(open_conns[conn, "class"])
-      if (!is.na(conn_id)) {
-        try({
-          close(getConnection(conn_id))
-        }, silent = TRUE)
-      }
-    }
+  for (conn in seq_len(nrow(open_conns))) {
+    try(close(getConnection(as.integer(open_conns[conn, "description"]))), silent = TRUE)
   }
 }
 
 # Call the function to close all open connections
 close_all_connections()
+```
+
+## Repeats Track
+```{r}
+library(S4Vectors)
+```
+```{r}
+repeat_class_col <- c(
+  "DNA" = "steelblue3",
+  "LINE" = "mediumseagreen",
+  "LTR" = "#fdf065",
+  "SINE" = "palevioletred2",
+  "RNA" = "orange",
+  "Satellite" = "#c02727",
+  "Simple_repeat" = "lightgrey",
+  "Low_complexity" = "lightgrey"
+)
+```
+```{r}
+repeats_file <- "/home/yakupova/1PROJECTS/Y/Y_annotation_plot/GCA_009762305.2_mZalCal1.pri.v2_rm.CM019820.2.csv"
+repeats <- read.csv(repeats_file, sep = '\t')
+repeats <- repeats %>%
+  mutate(repeat_type = ifelse(grepl("LINE", repeat_class), "LINE",
+                        ifelse(grepl("SINE", repeat_class), "SINE",
+                        ifelse(grepl("LTR", repeat_class), "LTR",
+                        ifelse(grepl("DNA", repeat_class), "DNA",
+                        ifelse(grepl("RNA", repeat_class), "RNA", repeat_class))))))
+```
+```{r}
+# Create a GRanges object from the repeats data frame with reduced information
+gr_repeats <- GRanges(seqnames = repeats$query_sequence,
+              ranges = IRanges(start = repeats$pos_in_query_begin, end = repeats$pos_in_query_end),
+              class = repeats$repeat_type,
+              strand = ifelse(repeats$direction == "C", "*", repeats$direction)
+)
+```
+```{r}
+gr_repeats_reduced <- unlist(reduce(split(gr_repeats, gr_repeats$class)))
+head(names(gr_repeats_reduced))
+
+repeats_reduced <- data.frame(
+  seqnames = as.character(seqnames(gr_repeats_reduced)),
+  start = start(gr_repeats_reduced),
+  end = end(gr_repeats_reduced),
+  class = names(gr_repeats_reduced)
+)
+head(repeats_reduced)
+```
+
+```{r}
+repeatsTrack <- AnnotationTrack(genome = "ZalCal", chromosome = chr, name = "Repeats",
+                                range = repeats_reduced,
+                                groups = repeats_reduced$class,
+                                fill = repeat_class_col[repeats_reduced$class],
+                                col = "transparent",
+                                stacking = "dense"
+)
+```
+## Plot Tracks
+```{r}
+plotTracks(list(repeatsTrack),
+           from = plot_start, to = plot_end,
+           chromosome = chr,
+           legend = TRUE, groupAnnotation = "feature",
+           rotation.group = 90, just.group = "above",
+           background.panel = "white", background.title = "white",
+           col.axis = "black", col.title = "black")
 ```

@@ -1,10 +1,10 @@
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
+# if (!requireNamespace("BiocManager", quietly = TRUE))
+#   install.packages("BiocManager")
 
-BiocManager::install("Gviz")
-BiocManager::install("GenomicRanges")
-install.packages("sqldf")
+# BiocManager::install("Gviz")
+# BiocManager::install("GenomicRanges")
+# install.packages("sqldf")
 ```
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
@@ -124,14 +124,48 @@ repeat_class_col <- c(
   "Simple_repeat" = "lightgrey",
   "Low_complexity" = "lightgrey"
 )
+repeat_class_col <- c(
+  "DNA" = "steelblue3",
+  "LINE" = "mediumseagreen",
+  "LTR" = "#fdf065",
+  "SINE" = "palevioletred2",
+  "RNA" = "orange",
+  "Satellite" = "#c02727",
+  "Simple_repeat" = "lightgrey",
+  "Low_complexity" = "lightgrey"
+)
+```
+```{r}
 repeats_file <- "/home/yakupova/1PROJECTS/Y/Y_annotation_plot/GCA_009762305.2_mZalCal1.pri.v2_rm.CM019820.2.csv"
 repeats <- read.csv(repeats_file, sep = '\t')
-repeats <- repeats %>% filter(!repeat_class %in% c("LINE/CR1", "LINE/L1", "LINE/L2", "LINE/Penelope", "LINE/RTE-BovB"))
+# repeats <- repeats %>% filter(!repeat_class %in% c("LINE/CR1", "LINE/L1", "LINE/L2", "LINE/Penelope", "LINE/RTE-BovB"))
+# repeats <- repeats %>% filter(grepl("SINE", repeat_class))
+repeats <- repeats %>%
+  mutate(repeat_type = ifelse(grepl("LINE", repeat_class), "LINE",
+                        ifelse(grepl("SINE", repeat_class), "SINE",
+                        ifelse(grepl("LTR", repeat_class), "LTR",
+                        ifelse(grepl("DNA", repeat_class), "DNA",
+                        ifelse(grepl("RNA", repeat_class), "RNA", repeat_class))))))
+gr_repeats <- GRanges(seqnames = repeats$query_sequence,
+              ranges = IRanges(start = repeats$pos_in_query_begin, end = repeats$pos_in_query_end),
+              class = repeats$repeat_type,
+              strand = ifelse(repeats$direction == "C", "*", repeats$direction)
+              )
+gr_repeats_reduced <- unlist(reduce(split(gr_repeats, gr_repeats$class)))
+
+repeats_reduced <- data.frame(
+  seqnames = as.character(seqnames(gr_repeats_reduced)),
+  start = start(gr_repeats_reduced),
+  end = end(gr_repeats_reduced),
+  class = names(gr_repeats_reduced)
+)
+repeats_reduced <- repeats_reduced %>%
+  filter(class %in% c("DNA", "RNA"))
 
 repeatsTrack <- AnnotationTrack(genome = "ZalCal", chromosome = chr, name = "Repeats",
-                                start = repeats$pos_in_query_begin, end = repeats$pos_in_query_end,
-                                feature = repeats$ID,
-                                fill = repeat_class_col[repeats$repeat_class],
+                                range = repeats_reduced,
+                                groups = repeats_reduced$class,
+                                fill = repeat_class_col[repeats_reduced$class],
                                 col = "transparent",
                                 stacking = "dense"
 )
@@ -167,8 +201,7 @@ plotTracks(list(
               snpTrackBioinf,
               repeatsTrack,
               homologTrack,
-              coverageTrack
-),
+              coverageTrack),
            from = plot_start, to = plot_end,
            chromosome = chr,
            legend = TRUE, groupAnnotation = "feature",
