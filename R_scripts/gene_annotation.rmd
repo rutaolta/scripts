@@ -51,7 +51,7 @@ snp_data <- read.csv(snp_file, sep = "\t")
 snpTrackMassArray <- AnnotationTrack(genome = gen, chromosome = chr, name = "MassArray SNPs",
                                      start = snp_data$Position, end = snp_data$Position,
                                      id = snp_data$Assay, feature = snp_data$Assay,
-                                     stacking = "dense",
+                                     stacking = "dense", size = 0.2,
                                      col = "lightgrey", fill = "lightgrey"
 )
 ```
@@ -63,7 +63,7 @@ snp_data <- read.csv(snp_file, sep = "\t")
 
 snpTrackBioinf <- AnnotationTrack(genome = gen, chromosome = chr, name = "Bioinf SNPs",
                                   start = snp_data$Position, end = snp_data$Position,
-                                  stacking = "dense",
+                                  stacking = "dense", size = 0.2,
                                   col = "lightgrey", fill = "lightgrey"
 )
 ```
@@ -83,47 +83,13 @@ geneTrack <- AnnotationTrack(genome = "ZalCal", chromosome = chr, name = "Genes"
                              start = anno$Start, end = anno$Stop, strand = anno$Strand,
                              feature = anno$Name, groups = anno$Yregion,
                              fill = Yregion_col[anno$Yregion], col = "transparent",
-                             stacking = "hide", shape = "fixedArrow", arrowHeadWidth = 100
+                             stacking = "hide", shape = "fixedArrow", arrowHeadWidth = 100,
+                             size = 0.5
 )
 ```
 
 ## Repeats Track
 ```{r}
-repeat_class_col <- c(
-  "DNA" = "steelblue3",
-  "DNA?" = "steelblue3",
-  "DNA/hAT-Ac" = "steelblue3",
-  "DNA/hAT-Blackjack" = "steelblue3",
-  "DNA/hAT-Charlie" = "steelblue3",
-  "DNA/hAT-Tip100" = "steelblue3",
-  "DNA/PIF-Harbinger" = "steelblue3",
-  "DNA/TcMar-Mariner" = "steelblue3",
-  "DNA/TcMar-Tc2" = "steelblue3",
-  "DNA/TcMar-Tigger" = "steelblue3",
-  "LINE/CR1" = "mediumseagreen",
-  "LINE/L1" = "mediumseagreen",
-  "LINE/L2" = "mediumseagreen",
-  "LINE/Penelope" = "mediumseagreen",
-  "LINE/RTE-BovB" = "mediumseagreen",
-  "LTR?" = "#fdf065",
-  "LTR/ERV1" = "#fdf065",
-  "LTR/ERVL" = "#fdf065",
-  "LTR/ERVL?" = "#fdf065",
-  "LTR/ERVL-MaLR" = "#fdf065",
-  "LTR/Gypsy" = "#fdf065",
-  "LTR/Gypsy?" = "#fdf065",
-  "SINE/5S-Deu-L2" = "palevioletred2",
-  "SINE/MIR" = "palevioletred2",
-  "SINE/tRNA" = "palevioletred2",
-  "SINE/tRNA-Deu" = "palevioletred2",
-  "SINE/tRNA-RTE" = "palevioletred2",
-  "rRNA" = "orange",
-  "snRNA" = "orange",
-  "tRNA" = "orange",
-  "Satellite" = "#c02727",
-  "Simple_repeat" = "lightgrey",
-  "Low_complexity" = "lightgrey"
-)
 repeat_class_col <- c(
   "DNA" = "steelblue3",
   "LINE" = "mediumseagreen",
@@ -135,40 +101,66 @@ repeat_class_col <- c(
   "Low_complexity" = "lightgrey"
 )
 ```
+
+```{r}
+# Function creates track for each type/class of repeats or any other feature with name in DataFrame df
+make_track <- function(name, df) {
+  df <- df %>% filter(class %in% c(name))
+  track <- AnnotationTrack(genome = genome, chromosome = chr, range = df,
+                           name = df$class[1], groups = df$class,
+                           fill = repeat_class_col[df$class],
+                           col = "transparent",
+                           stacking = "dense", size = 0.1
+                          )
+  return(track)
+}
+```
+
 ```{r}
 repeats_file <- "/home/yakupova/1PROJECTS/Y/Y_annotation_plot/GCA_009762305.2_mZalCal1.pri.v2_rm.CM019820.2.csv"
 repeats <- read.csv(repeats_file, sep = '\t')
 # repeats <- repeats %>% filter(!repeat_class %in% c("LINE/CR1", "LINE/L1", "LINE/L2", "LINE/Penelope", "LINE/RTE-BovB"))
 # repeats <- repeats %>% filter(grepl("SINE", repeat_class))
+```
+
+```{r}
+# Group subclasses of repeats into classes
 repeats <- repeats %>%
   mutate(repeat_type = ifelse(grepl("LINE", repeat_class), "LINE",
-                        ifelse(grepl("SINE", repeat_class), "SINE",
-                        ifelse(grepl("LTR", repeat_class), "LTR",
-                        ifelse(grepl("DNA", repeat_class), "DNA",
-                        ifelse(grepl("RNA", repeat_class), "RNA", repeat_class))))))
+                       ifelse(grepl("SINE", repeat_class), "SINE",
+                       ifelse(grepl("LTR", repeat_class), "LTR",
+                       ifelse(grepl("DNA", repeat_class), "DNA",
+                       ifelse(grepl("RNA", repeat_class), "RNA", repeat_class))))))
+```
+
+```{r}
+# Transform into GRanges representaion to merge overlapping ranges
 gr_repeats <- GRanges(seqnames = repeats$query_sequence,
               ranges = IRanges(start = repeats$pos_in_query_begin, end = repeats$pos_in_query_end),
               class = repeats$repeat_type,
-              strand = ifelse(repeats$direction == "C", "*", repeats$direction)
+              # strand = ifelse(repeats$direction == "C", "*", repeats$direction)
               )
 gr_repeats_reduced <- unlist(reduce(split(gr_repeats, gr_repeats$class)))
+```
 
+```{r}
+# Go back to DataFrame represenation
 repeats_reduced <- data.frame(
   seqnames = as.character(seqnames(gr_repeats_reduced)),
   start = start(gr_repeats_reduced),
   end = end(gr_repeats_reduced),
   class = names(gr_repeats_reduced)
 )
-repeats_reduced <- repeats_reduced %>%
-  filter(class %in% c("DNA", "RNA"))
+```
 
-repeatsTrack <- AnnotationTrack(genome = "ZalCal", chromosome = chr, name = "Repeats",
-                                range = repeats_reduced,
-                                groups = repeats_reduced$class,
-                                fill = repeat_class_col[repeats_reduced$class],
-                                col = "transparent",
-                                stacking = "dense"
-)
+```{r}
+# Create track that will gather all subtracks of repeats under one track
+repeatsTrack <- HighlightTrack(trackList = list(make_track("DNA", repeats_reduced),
+                                                make_track("RNA", repeats_reduced),
+                                                make_track("LINE", repeats_reduced),
+                                                make_track("SINE", repeats_reduced),
+                                                make_track("LTR", repeats_reduced)),
+                               name = "Repeats")
 ```
 
 ## Homologous Track
@@ -178,7 +170,7 @@ homolog <- read.csv(homolog_file, sep = "\t")
 
 homologTrack <- AnnotationTrack(genome = "ZalCal", chromosome = chr, name = "Homologs",
                                 start = homolog$Start, end = homolog$End,
-                                stacking = "dense",
+                                stacking = "dense", size = 0.2,
                                 col = "#2180ce", fill = "#2180ce"
 )
 ```
@@ -187,8 +179,9 @@ homologTrack <- AnnotationTrack(genome = "ZalCal", chromosome = chr, name = "Hom
 ```{r}
 bam <- "/home/yakupova/1PROJECTS/Y/bam/G465_merged_duprm_subsample0_25_realigned.Y.bam"
 
-coverageTrack <- DataTrack(range = bam, genome = "ZalCal", chromosome = chr, name = "Coverage",
-                           type = "l", window = -1, ylim = c(0, 20)
+coverageTrack <- DataTrack(range = bam, genome = "ZalCal", chromosome = chr, name = "Coverage\t(M)",
+                            col = "#464343",
+                            type = "l", window = -1, ylim = c(0, 20), size = 0.5
 )
 ```
 
