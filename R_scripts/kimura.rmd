@@ -1,0 +1,99 @@
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+```
+
+```{r}
+# Function to read RepeatMasker output and extract necessary columns
+read_repeatmasker <- function(filepath, chromosome = "CM019820.2") {
+  # Read the file, skipping the first 3 header lines
+  rm_data <- read.table(filepath, skip = 3, fill = TRUE, stringsAsFactors = FALSE)
+
+  # Rename columns based on RepeatMasker output format
+  colnames(rm_data) <- c("score", "div", "del", "ins", "query_sequence",
+                         "pos_in_query_begin", "pos_in_query_end", "pos_in_query_left",
+                         "direction", "matching_repeat", "repeat_class_family",
+                         "pos_in_repeat_begin", "pos_in_repeat_end", "pos_in_repeat_left",
+                         "ID")
+
+  # Extract repeat class and family
+  rm_data <- rm_data %>%
+    filter(query_sequence == chromosome) %>%
+    mutate(repeat_class = sapply(strsplit(repeat_class_family, '[/?]+'), "[", 1),
+           repeat_family = sapply(strsplit(repeat_class_family, '[/?]+'), "[", 2)) %>%
+    mutate(repeat_class = gsub("?", "", repeat_class))
+
+  return(rm_data)
+}
+```
+
+```{r}
+# Read RepeatMasker output
+filepath <- "/home/aliya/1BIOINF/1SEALIONS/assembly/GCA_009762305.2_mZalCal1.pri.v2_rm.out"
+rm_data <- read_repeatmasker(filepath)
+
+# View the extracted data
+head(rm_data)
+```
+
+### Kimura hist version with counts
+```{r}
+# Aggregate data to create a histogram of Kimura distances
+kimura_hist <- rm_data %>%
+  group_by(repeat_class) %>%
+  summarise(kimura_divergence = list(div))
+
+# Unnest the list column
+kimura_hist <- kimura_hist %>% unnest(cols = kimura_divergence)
+
+# View the aggregated data
+head(kimura_hist)
+```
+
+```{r}
+# Plot the histogram to visualize the repeat landscape
+ggplot(kimura_hist, aes(x = kimura_divergence, fill = repeat_class)) +
+  geom_histogram(binwidth = 1, position = "stack", color = "black") +
+  scale_fill_brewer(palette = "Set3") +
+  labs(title = "Repeat Landscape (Kimura Plot)",
+       x = "Kimura Divergence (%)",
+       y = "Count",
+       fill = "Repeat Class") +
+  theme_minimal()
+```
+
+### Kimura hist version with percentage of genome
+```{r}
+# Calculate the total length of the genome covered by repeats
+total_length <- 3986568
+
+# Aggregate data to create a histogram of Kimura distances
+kimura_hist <- rm_data %>%
+  mutate(kimura_bin = cut(div, breaks = seq(0, 50, by = 1), include.lowest = TRUE)) %>%
+  group_by(repeat_class, kimura_bin) %>%
+  summarise(count = sum(pos_in_query_end - pos_in_query_begin + 1)) %>%
+  ungroup() %>%
+  mutate(percent_genome = (count / total_length) * 100)
+
+# View the aggregated data
+head(kimura_hist)
+```
+
+```{r}
+# Plot the histogram to visualize the repeat landscape
+ggplot(kimura_hist, aes(x = as.numeric(as.character(kimura_bin)), y = percent_genome, fill = repeat_class)) +
+  geom_bar(stat = "identity", position = "stack", color = "black") +
+  scale_fill_brewer(palette = "Set3") +
+  labs(title = "Repeat Landscape (Kimura Plot)",
+       x = "Kimura Divergence (%)",
+       y = "Percentage of Genome",
+       fill = "Repeat Class") +
+  theme_minimal()
+
+```
+
+```{r}
+
+```
